@@ -17,6 +17,10 @@ void Led_Output(uint8_t data){  // write output to P1.0
   P1->OUT = data;
 }
 
+void Port2_Output(uint8_t data){  // write three outputs bits of P2
+  P2->OUT = (P2->OUT&0xF8)|data;
+}
+
 uint8_t LineResult,BumpResult;
 int FSM_Input(void){
     //Reflectance
@@ -50,10 +54,10 @@ void SysTick_Handler(void){
 // Linked data structure
 typedef struct State {
   uint8_t  out;                // LED output to mark state (debug)
-  uint16_t motorSpeed_L;       //speed of Left motor
-  uint16_t motorSpeed_R;       //speed of Right motor
-  uint32_t time_length;        //time motors are enganged
-  const struct State *next[4]; // Next if 2-bit input is 0-3
+  uint16_t motorSpeed_L;       // speed of Left motor
+  uint16_t motorSpeed_R;       // speed of Right motor
+  uint32_t time_length;        // time motors are enganged
+  const struct State *next[4]; // next if 2-bit input is 0-3
 
 } State_t;
 
@@ -67,16 +71,27 @@ typedef struct State {
 #define LostGo      &fsm[7] // S8
 #define LostStop    &fsm[8] // S9
 
+/*
+ *  dark     --- 0x00
+ *  red      R-- 0x01
+ *  green    -G- 0x02
+ *  yellow   RG- 0x03
+ *  blue     --B 0x04
+ *  pink     R-B 0x05
+ *  sky blue -GB 0x06
+ *  white    RBG 0x07
+*/
+
 State_t fsm[9]={
-    {0x01, 5000, 5000,  500, { center, L1, R1, center }},                   // S1 C
-    {0x02, 3000, 1000,  500, { LostL, L2, R1, center }},                    // S2 L1
-    {0x02, 3000, 3000,  500, { LostL, L1, R1, center }},                    // S3 L2
-    {0x03, 1000, 3000,  500, { LostR, L1, R2, center }},                    // S4 R1
-    {0x04, 3000, 3000,  500, { LostR, L1, R1, center }},                    // S5 R2
-    {0x05, 1000, 5000, 1000, { LostGo, L1, R1, center }},                   // S6 LostL
-    {0x06, 5000, 1000, 1000, { LostGo, L1, R1, center }},                   // S7 LostR
-    {0x07, 4000, 4000, 2000, { LostStop, L1, R1, center }},                 // S8 Lost Go
-    {0x00,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}    // S9 Lost Stop
+    {0x01, 5000, 5000,  500, &Motor_Forward, { center, L1, R1, center }},                   // S1 C         red
+    {0x02, 3000, 1000,  500, &Motor_Left, { LostL, L2, R1, center }},                    // S2 L1        green
+    {0x02, 3000, 3000,  500, { LostL, L1, R1, center }},                    // S3 L2        green
+    {0x03, 1000, 3000,  500, { LostR, L1, R2, center }},                    // S4 R1        yellow
+    {0x04, 3000, 3000,  500, { LostR, L1, R1, center }},                    // S5 R2        blue
+    {0x05, 1000, 5000, 1000, { LostGo, L1, R1, center }},                   // S6 LostL     pink
+    {0x06, 5000, 1000, 1000, { LostGo, L1, R1, center }},                   // S7 LostR     sky blue
+    {0x07, 4000, 4000, 2000, { LostStop, L1, R1, center }},                 // S8 Lost Go   white
+    {0x00,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}    // S9 Lost Stop red
 };
 
 
@@ -99,10 +114,11 @@ int main(void){
 
     while(1){
         //Output = Spt->out;
-        LaunchPad_LED(Spt->out);
+        Port2_Output(Spt->out);
 
-//        Motor_LeftSimple    (Spt->motorSpeed_L,Spt->time_length);
-//        Motor_RightSimple   (Spt->motorSpeed_R,Spt->time_length);
+        Clock_Delay1ms(3000);
+
+
 
         //Input = FSM_Input();
         Spt = Spt->next[FSM_Input()];

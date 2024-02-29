@@ -67,20 +67,20 @@ void HandleCollision(uint8_t bumpSensor){
    CollisionFlag = 1;
 }
 
-//int main(void){  // test of interrupt-driven bump interface
-//  Clock_Init48MHz();   // 48 MHz clock; 12 MHz Timer A clock
-//  CollisionFlag = 0;
-//  Motor_InitSimple();        // activate Lab 13 software
-//
-//  BumpInt_Init(&HandleCollision);
-//
-//  EnableInterrupts();
-//  while(1){
-////    WaitForInterrupt();
-//    Motor_ForwardSimple(2500,2500); // 50%
-//
-//  }
-//}
+int main(void){  // test of interrupt-driven bump interface
+  Clock_Init48MHz();   // 48 MHz clock; 12 MHz Timer A clock
+  CollisionFlag = 0;
+  Motor_InitSimple();        // activate Lab 13 software
+
+  BumpInt_Init(&HandleCollision);
+
+  EnableInterrupts();
+  while(1){
+//    WaitForInterrupt();
+    Motor_ForwardSimple(2500,2500); // 50%
+
+  }
+}
 
 
 //int main(void){
