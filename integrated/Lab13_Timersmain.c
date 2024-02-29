@@ -55,14 +55,14 @@ policies, either expressed or implied, of the FreeBSD Project.
 // Right motor enable connected to P3.6 (J2.11)
 
 #include "msp.h"
-#include "..\..\inc\bump.h"
-#include "..\..\inc\Clock.h"
-#include "..\..\inc\SysTick.h"
-#include "..\..\inc\CortexM.h"
-#include "..\..\inc\LaunchPad.h"
-#include "..\..\inc\Motor.h"
-#include "..\..\inc\TimerA1.h"
-#include "..\..\inc\TExaS.h"
+#include "../inc/bump.h"
+#include "../inc/Clock.h"
+#include "../inc/SysTick.h"
+#include "../inc/CortexM.h"
+#include "../inc/LaunchPad.h"
+#include "../inc/Motor.h"
+#include "../inc/TimerA1.h"
+#include "../inc/TExaS.h"
 
 // Driver test
 void TimedPause(uint32_t time){
@@ -105,19 +105,19 @@ void Task(void){
 int Program13_2(void){
   Clock_Init48MHz();
   LaunchPad_Init();  // built-in switches and LEDs
-  TimerA1_Init(&Task,50000);  // 1000 Hz
+  TimerA1_Init(&Task,500);  // 1000 Hz
   EnableInterrupts();
   while(1){
     BLUELED ^= 0x01; // toggle P2.1
   }
 }
 
-int main(void){
-    // write a main program that uses PWM to move the robot
-    // like Program13_1, but uses TimerA1 to periodically
-    // check the bump switches, stopping the robot on a collision
- 
-    Program13_2();
-
-}
+//int main(void){
+//    // write a main program that uses PWM to move the robot
+//    // like Program13_1, but uses TimerA1 to periodically
+//    // check the bump switches, stopping the robot on a collision
+//
+//    Program13_2();
+//
+//}
 
