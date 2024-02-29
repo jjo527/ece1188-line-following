@@ -64,7 +64,7 @@ void BumpInt_Init(void(*task)(uint8_t)){
     P4->IFG &= ~0xED;             // initially clear interrupt flag
     P4->IE |= 0xED;               // arm interrupt on P4.0, P4.2, P4.3, P4.5-P4.7
 
-    //Port 4 IRQ is on IPR 9 of NVIC
+    // port 4 IRQ is on IPR 9 of NVIC
     //0xFF0F FFFF = 11111111000011111111111111111111, clearing bits 23-21 which house interrupt priority
     NVIC->IP[9] = (NVIC->IP[9]&0xFF0FFFFF) | 0x00400000;     //set priority to 2
     //Port 4 IRQ is interrupt number 38

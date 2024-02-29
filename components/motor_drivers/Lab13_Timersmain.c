@@ -55,14 +55,14 @@ policies, either expressed or implied, of the FreeBSD Project.
 // Right motor enable connected to P3.6 (J2.11)
 
 #include "msp.h"
-#include "..\..\inc\bump.h"
-#include "..\..\inc\Clock.h"
-#include "..\..\inc\SysTick.h"
-#include "..\..\inc\CortexM.h"
-#include "..\..\inc\LaunchPad.h"
-#include "..\..\inc\Motor.h"
-#include "..\..\inc\TimerA1.h"
-#include "..\..\inc\TExaS.h"
+#include "../../inc/bump.h"
+#include "../../inc/Clock.h"
+#include "../../inc/SysTick.h"
+#include "../../inc/CortexM.h"
+#include "../../inc/LaunchPad.h"
+#include "../../inc/Motor.h"
+#include "../../inc/TimerA1.h"
+#include "../../inc/TExaS.h"
 
 // Driver test
 void TimedPause(uint32_t time){
@@ -117,7 +117,7 @@ int main(void){
     // like Program13_1, but uses TimerA1 to periodically
     // check the bump switches, stopping the robot on a collision
  
-    Program13_2();
+    Program13_1();
 
 }
 

@@ -54,7 +54,7 @@ policies, either expressed or implied, of the FreeBSD Project.
 
 #include <stdint.h>
 #include "msp432.h"
-#include "..\inc\Clock.h"
+#include "../inc/Clock.h"
 
 // ------------Reflectance_Init------------
 // Initialize the GPIO pins associated with the QTR-8RC

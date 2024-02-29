@@ -39,9 +39,9 @@ those of the authors and should not be interpreted as representing official
 policies, either expressed or implied, of the FreeBSD Project.
 */
 #include <stdint.h>
-#include "..\..\inc\CortexM.h"
+#include "../../inc/CortexM.h"
 #include "msp.h"
-#include "..\..\inc\TExaS.h"
+#include "../../inc/TExaS.h"
 // bit 7 must be set, so TExaSdisplay can separate characters from LA data
 char volatile LogicData; // this is the 7-bit value sent to display
 void LogicAnalyzer(void){        // called 10k/sec
