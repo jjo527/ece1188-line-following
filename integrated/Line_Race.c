@@ -32,11 +32,11 @@ typedef struct State {
     uint16_t motorSpeed_L;                     // speed of Left motor
     uint16_t motorSpeed_R;                     // speed of Right motor
     uint32_t time_length;                      // time motors are engaged
-    const struct State *next[4];               // next if 2-bit input is 0-3
+    const struct State *next[6];               // next if 2-bit input is 0-3
 } State_t;
 
 enum FsmInput {
-    FAR_LEFT,
+    FAR_LEFT = 0,
     CLOSE_LEFT,
     MIDDLE,
     CLOSE_RIGHT,
@@ -48,26 +48,26 @@ enum FsmInput {
 // ---------------------------------------------------
 // FSM Initialization
 
-#define center      &fsm[0] // S1
-#define L1          &fsm[1] // S2
-#define L2          &fsm[2] // S3
-#define R1          &fsm[3] // S4
-#define R2          &fsm[4] // S5
+#define CENTER      &fsm[0] // S1
+#define CLOSE_LEFT  &fsm[1] // S2
+#define FAR_LEFT    &fsm[2] // S3
+#define CLOSE_RIGHT &fsm[3] // S4
+#define FAR_RIGHT   &fsm[4] // S5
 #define LostL       &fsm[5] // S6
 #define LostR       &fsm[6] // S7
 #define LostGo      &fsm[7] // S8
 #define LostStop    &fsm[8] // S9
 
 State_t fsm[9]={
-    {0x01,   &Motor_Forward, 5000, 5000,  500, { center, L1, R1, center }},                   // S1 C         red
-    {0x02,      &Motor_Left, 3000, 1000,  500, { LostL, L2, R1, center }},                    // S2 L1        green
-    {0x02,      &Motor_Left, 3000, 3000,  500, { LostL, L1, R1, center }},                    // S3 L2        green
-    {0x03,     &Motor_Right, 1000, 3000,  500, { LostR, L1, R2, center }},                    // S4 R1        yellow
-    {0x04,     &Motor_Right, 3000, 3000,  500, { LostR, L1, R1, center }},                    // S5 R2        blue
-    {0x05,      &Motor_Left, 1000, 5000, 1000, { LostGo, L1, R1, center }},                   // S6 LostL     pink
-    {0x06,     &Motor_Right, 5000, 1000, 1000, { LostGo, L1, R1, center }},                   // S7 LostR     sky blue
-    {0x07,  &Motor_Backward, 4000, 4000, 2000, { LostStop, L1, R1, center }},                 // S8 Lost Go   white
-    {0x00, &Motor_Stop_Pars,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}    // S9 Lost Stop red
+    {0x01,   &Motor_Forward, 5000, 5000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostGo}},    // S1 CENTER      red
+    {0x02,   &Motor_Forward, 3000, 4000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},     // S2 CLOSE_LEFT  green
+    {0x03,   &Motor_Left, 100, 2000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},     // S3 FAR_LEFT    yellow
+    {0x04,   &Motor_Forward, 4000, 3000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},     // S4 CLOSE_RIGHT blue
+    {0x05,   &Motor_Right, 2000, 1000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},     // S5 FAR_RIGHT   pink
+    {0x07,      &Motor_Left, 100, 500, 1000, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},     // S6 LostL       white
+    {0x07,     &Motor_Right, 500, 100, 1000, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},     // S7 LostR       white
+    {0x07,  &Motor_Backward, 400, 400, 2000, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostGo}},    // S8 Lost Go     white
+    {0x07, &Motor_Stop_Pars,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}                          // S9 Lost Stop   white
 };
 
 // ---------------------------------------------------
@@ -96,28 +96,28 @@ int FSM_Input(void){
     // 7654 33210
     // 11XX XXXX
     if (g_LineResult&0xC0) {
-        return FAR_LEFT;
+        return 0;
     }
     // Checking Far Right
     // 7654 3210
     // XXXX XX11
     else if (g_LineResult&0x03) {
-        return FAR_RIGHT;
+        return 4;
     }
     // Checking Close Left
     // 7654 3210
     // XX11 XXXX
     else if (g_LineResult&0x30) {
-        return CLOSE_LEFT;
+        return 1;
     }
     // Checking Close Right
     // 7654 3210
     // XXXX 11XX
-    else if (g_LineResult&0x0C0) {
-        return CLOSE_RIGHT;
+    else if (g_LineResult&0x0C) {
+        return 3;
     }
     else {
-        return LOST;
+        return 5;
     }
 }
 
@@ -144,16 +144,13 @@ int main(void) {
     SysTick_Init(48000,2);//64Hz
     LaunchPad_Init();
     Reflectance_Init();
-    //Bump_Init();
+    Motor_Init();
 
-    //adjust motor speeds in testing
+    EnableInterrupts();
+
 
     State_t *Spt;  // pointer to the current state
-    //int Input;
-    //uint32_t Output;
-    //uint32_t heart=1;
-    Spt = center;
-
+    Spt = CENTER;
 
     while(1){
         (*Spt->motorFunction)(Spt->motorSpeed_L, Spt->motorSpeed_R);
@@ -162,8 +159,25 @@ int main(void) {
         Port2_Output(Spt->out);
 
         // Delay for testing
-        Clock_Delay1ms(3000);
+//        Clock_Delay1ms(250);
 
-        Spt = Spt->next[FSM_Input()];
+        int temp = FSM_Input();
+
+        Spt = Spt->next[temp];
     }
+
+//    while(1){
+//    // TimedPause(4000);
+//    Clock_Delay1ms(1000);
+//    Motor_Forward(3000,1000);  // your function
+////    TimedPause(2000);
+//    Clock_Delay1ms(1000);
+//    Motor_Backward(3000,1000); // your function
+////    TimedPause(3000);
+//    Clock_Delay1ms(1000);
+//    Motor_Left(1000,2000);     // your function
+////    TimedPause(3000);
+//    Clock_Delay1ms(1000);
+//    Motor_Right(2000,500);    // your function
+//  }
 }
