@@ -28,6 +28,7 @@ int FSM_Input(void){
 
 
 int count=0,delay_systick=1;
+
 void SysTick_Handler(void){
   if (count%10==0){
       Reflectance_Start();
@@ -56,26 +57,26 @@ typedef struct State {
 
 } State_t;
 
-#define S1    &fsm[0]
-#define S2    &fsm[1]
-#define S3    &fsm[2]
-#define S4    &fsm[3]
-#define S5    &fsm[4]
-#define S6    &fsm[5]
-#define S7    &fsm[6]
-#define S8    &fsm[7]
-#define S9    &fsm[8]
+#define center      &fsm[0] // S1
+#define L1          &fsm[1] // S2
+#define L2          &fsm[2] // S3
+#define R1          &fsm[3] // S4
+#define R2          &fsm[4] // S5
+#define LostL       &fsm[5] // S6
+#define LostR       &fsm[6] // S7
+#define LostGo      &fsm[7] // S8
+#define LostStop    &fsm[8] // S9
 
 State_t fsm[9]={
-    {0x01, 5000, 5000,  500, { S1, S2, S4, S1 }},  // S1 C
-    {0x02, 3000, 1000,  500, { S6, S3, S4, S1 }},  // S2 L1
-    {0x02, 3000, 3000,  500, { S6, S2, S4, S1 }},  // S3 L2
-    {0x03, 1000, 3000,  500, { S7, S2, S5, S1 }},  // S4 R1
-    {0x04, 3000, 3000,  500, { S7, S2, S4, S1 }},  // S5 R2
-    {0x05, 1000, 5000, 1000, { S8, S2, S4, S1 }},  // S6 LostL
-    {0x06, 5000, 1000, 1000, { S8, S2, S4, S1 }},  // S7 LostR
-    {0x07, 4000, 4000, 2000, { S9, S2, S4, S1 }},  // S8 Lost Go
-    {0x00,    0,    0,  500, { S9, S9, S9, S9 }}   // S9 Lost Stop
+    {0x01, 5000, 5000,  500, { center, L1, R1, center }},                   // S1 C
+    {0x02, 3000, 1000,  500, { LostL, L2, R1, center }},                    // S2 L1
+    {0x02, 3000, 3000,  500, { LostL, L1, R1, center }},                    // S3 L2
+    {0x03, 1000, 3000,  500, { LostR, L1, R2, center }},                    // S4 R1
+    {0x04, 3000, 3000,  500, { LostR, L1, R1, center }},                    // S5 R2
+    {0x05, 1000, 5000, 1000, { LostGo, L1, R1, center }},                   // S6 LostL
+    {0x06, 5000, 1000, 1000, { LostGo, L1, R1, center }},                   // S7 LostR
+    {0x07, 4000, 4000, 2000, { LostStop, L1, R1, center }},                 // S8 Lost Go
+    {0x00,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}    // S9 Lost Stop
 };
 
 
@@ -93,7 +94,7 @@ int main(void){
     //int Input;
     //uint32_t Output;
     //uint32_t heart=1;
-    Spt = S1;
+    Spt = center;
 
 
     while(1){
