@@ -3,14 +3,14 @@
 #include "../inc/clock.h"
 #include "../inc/LaunchPad.h"
 #include "../inc/Texas.h"
-#include "..\inc\Reflectance.h"
-#include "..\inc\MotorSimple.h"
+#include "../inc/Reflectance.h"
+//#include "../inc/MotorSimple.h"
 
 
 #include "../inc/CortexM.h"
 #include "../inc/SysTickInts.h"
 
-#include "..\inc\bump.h"
+#include "../inc/bump.h"
 
 
 void Led_Output(uint8_t data){  // write output to P1.0
@@ -32,29 +32,29 @@ void SysTick_Handler(void){
   if (count%10==0){
       Reflectance_Start();
       count +=1;
-  }
-  else if (count%(10+delay_systick)==0){
+  }else if (count%(10+delay_systick)==0){
       LineResult = Reflectance_End();
       //BumpResult = Bump_Read();
       //Led_Refl();//keep one commented out
       //Led_Bump();
       count=0;
+  }else {
+      count +=1;
   }
-  else
-  { count +=1; }
+}
 
 
 
 
 // Linked data structure
-struct State {
+typedef struct State {
   uint8_t  out;                // LED output to mark state (debug)
   uint16_t motorSpeed_L;       //speed of Left motor
   uint16_t motorSpeed_R;       //speed of Right motor
   uint32_t time_length;        //time motors are enganged
   const struct State *next[4]; // Next if 2-bit input is 0-3
-};
-typedef const struct State State_t;
+
+} State_t;
 
 #define S1    &fsm[0]
 #define S2    &fsm[1]
@@ -66,6 +66,18 @@ typedef const struct State State_t;
 #define S8    &fsm[7]
 #define S9    &fsm[8]
 
+State_t fsm[9]={
+    {0x01, 5000, 5000,  500, { S1, S2, S4, S1 }},  // S1 C
+    {0x02, 3000, 1000,  500, { S6, S3, S4, S1 }},  // S2 L1
+    {0x02, 3000, 3000,  500, { S6, S2, S4, S1 }},  // S3 L2
+    {0x03, 1000, 3000,  500, { S7, S2, S5, S1 }},  // S4 R1
+    {0x04, 3000, 3000,  500, { S7, S2, S4, S1 }},  // S5 R2
+    {0x05, 1000, 5000, 1000, { S8, S2, S4, S1 }},  // S6 LostL
+    {0x06, 5000, 1000, 1000, { S8, S2, S4, S1 }},  // S7 LostR
+    {0x07, 4000, 4000, 2000, { S9, S2, S4, S1 }},  // S8 Lost Go
+    {0x00,    0,    0,  500, { S9, S9, S9, S9 }}   // S9 Lost Stop
+};
+
 
 int main(void){
     Clock_Init48MHz();
@@ -75,17 +87,7 @@ int main(void){
     //Bump_Init();
 
     //adjust motor speeds in testing
-    State_t fsm[9]={
-        {0x01, 5000, 5000,  500, { S1, S2, S4, S1 }},  // S1 C
-        {0x02, 3000, 1000,  500, { S6, S3, S4, S1 }},  // S2 L1
-        {0x02, 3000, 3000,  500, { S6, S2, S4, S1 }},  // S3 L2
-        {0x03, 1000, 3000,  500, { S7, S2, S5, S1 }},  // S4 R1
-        {0x04, 3000, 3000,  500, { S7, S2, S4, S1 }},  // S5 R2
-        {0x05, 1000, 5000, 1000, { S8, S2, S4, S1 }},  // S6 LostL
-        {0x06, 5000, 1000, 1000, { S8, S2, S4, S1 }},  // S7 LostR
-        {0x07, 4000, 4000, 2000, { S9, S2, S4, S1 }},  // S8 Lost Go
-        {0x00,    0,    0,  500, { S9, S9, S9, S9 }}   // S9 Lost Stop
-    };
+
 
     State_t *Spt;  // pointer to the current state
     //int Input;
@@ -94,13 +96,12 @@ int main(void){
     Spt = S1;
 
 
-    while(1)
-    {
+    while(1){
         //Output = Spt->out;
         LaunchPad_LED(Spt->out);
 
-        Motor_LeftSimple    (Spt->motorSpeed_L,Spt->time_length);
-        Motor_RightSimple   (Spt->motorSpeed_R,Spt->time_length);
+//        Motor_LeftSimple    (Spt->motorSpeed_L,Spt->time_length);
+//        Motor_RightSimple   (Spt->motorSpeed_R,Spt->time_length);
 
         //Input = FSM_Input();
         Spt = Spt->next[FSM_Input()];
@@ -108,13 +109,3 @@ int main(void){
         //Led_Output(heart); //debug
     }
 }
-
-// Color    LED(s) Port2
-// dark     --- 0
-// red      R-- 0x01
-// blue     --B 0x04
-// green    -G- 0x02
-// yellow   RG- 0x03
-// sky blue -GB 0x06
-// white    RGB 0x07
-// pink     R-B 0x05

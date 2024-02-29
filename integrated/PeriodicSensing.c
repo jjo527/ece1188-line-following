@@ -1,15 +1,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "msp.h"
-#include "..\inc\bump.h"
-#include "..\inc\Reflectance.h"
-#include "..\inc\Clock.h"
-#include "..\inc\SysTickInts.h"
-#include "..\inc\CortexM.h"
-#include "..\inc\LaunchPad.h"
-#include "..\inc\FlashProgram.h"
-#include "..\inc\LaunchPad.h"
-#include "..\inc\TExaS.h"
+#include "../inc/bump.h"
+#include "../inc/Reflectance.h"
+#include "../inc/Clock.h"
+#include "../inc/SysTickInts.h"
+#include "../inc/CortexM.h"
+#include "../inc/LaunchPad.h"
+#include "../inc/FlashProgram.h"
+#include "../inc/LaunchPad.h"
+#include "../inc/TExaS.h"
 
 
 void Update_RGB_LED(char color) {
@@ -86,91 +86,91 @@ uint8_t Data; // QTRX
 int32_t Position;
 
 bool SemaphoreActive;
-void SysTick_Handler(void){ // PWM
-  cycle_count++;
-  total_count++;
-
-  if(cycle_count == 1) {
-      Reflectance_Start();
-  }
-
-  if(total_count % 100 == 0) {
-           SemaphoreActive = false;
-   }
-
-
-  if(cycle_count == 10) {
-      cycle_count = 0;
-
-      if(!SemaphoreActive) {
-          Data =  Reflectance_End();
-
-    if (Data) {
-        SemaphoreActive = true;
-    }
-
-    switch (Data) {
-        case 0x01:
-            Update_RGB_LED('r');
-            break;
-        case 0x02:
-            Update_RGB_LED('b');
-            break;
-        case 0x04:
-            Update_RGB_LED('g');
-            break;
-        case 0x08:
-            Update_RGB_LED('y');
-            break;
-        case 0x10:
-            Update_RGB_LED('s');
-            break;
-        case 0x20:
-            Update_RGB_LED('w');
-            break;
-        case 0x40:
-            Update_RGB_LED('p');
-            break;
-        case 0x80:
-            Update_RGB_LED('o');
-            break;
-        default:
-            break;
-    }
-
-    SemaphoreActive = false;
-      }
-  }
-
-  // bump check
-  uint8_t bumpData = Bump_Read();
-  if(bumpData < 63 && !SemaphoreActive) {
-        SemaphoreActive = true;
-
-        switch (bumpData) {
-            case 0x1F: // bit 5 low
-                Update_RGB_LED('r');
-                break;
-            case 0x2F: // bit 4 low
-                Update_RGB_LED('b');
-                break;
-            case 0x37: // bit 3 low
-                Update_RGB_LED('g');
-                break;
-            case 0x3B: // bit 2 low
-                Update_RGB_LED('y');
-                break;
-            case 0x3D: // bit 1 low
-                Update_RGB_LED('s');
-                break;
-            case 0x3E: // bit 0 low
-                Update_RGB_LED('w');
-                break;
-            default:
-                break;
-        }
-    }
-}
+//void SysTick_Handler(void){ // PWM
+//  cycle_count++;
+//  total_count++;
+//
+//  if(cycle_count == 1) {
+//      Reflectance_Start();
+//  }
+//
+//  if(total_count % 100 == 0) {
+//           SemaphoreActive = false;
+//   }
+//
+//
+//  if(cycle_count == 10) {
+//      cycle_count = 0;
+//
+//      if(!SemaphoreActive) {
+//          Data =  Reflectance_End();
+//
+//    if (Data) {
+//        SemaphoreActive = true;
+//    }
+//
+//    switch (Data) {
+//        case 0x01:
+//            Update_RGB_LED('r');
+//            break;
+//        case 0x02:
+//            Update_RGB_LED('b');
+//            break;
+//        case 0x04:
+//            Update_RGB_LED('g');
+//            break;
+//        case 0x08:
+//            Update_RGB_LED('y');
+//            break;
+//        case 0x10:
+//            Update_RGB_LED('s');
+//            break;
+//        case 0x20:
+//            Update_RGB_LED('w');
+//            break;
+//        case 0x40:
+//            Update_RGB_LED('p');
+//            break;
+//        case 0x80:
+//            Update_RGB_LED('o');
+//            break;
+//        default:
+//            break;
+//    }
+//
+//    SemaphoreActive = false;
+//      }
+//  }
+//
+//  // bump check
+//  uint8_t bumpData = Bump_Read();
+//  if(bumpData < 63 && !SemaphoreActive) {
+//        SemaphoreActive = true;
+//
+//        switch (bumpData) {
+//            case 0x1F: // bit 5 low
+//                Update_RGB_LED('r');
+//                break;
+//            case 0x2F: // bit 4 low
+//                Update_RGB_LED('b');
+//                break;
+//            case 0x37: // bit 3 low
+//                Update_RGB_LED('g');
+//                break;
+//            case 0x3B: // bit 2 low
+//                Update_RGB_LED('y');
+//                break;
+//            case 0x3D: // bit 1 low
+//                Update_RGB_LED('s');
+//                break;
+//            case 0x3E: // bit 0 low
+//                Update_RGB_LED('w');
+//                break;
+//            default:
+//                break;
+//        }
+//    }
+//}
 
 void GPIO_Init() {
     // make P2.0, P2.1, P2.2 outputs

@@ -86,7 +86,7 @@ void Motor_BackwardSimple(uint16_t duty, uint32_t time){
     // Runs even if any bumper switch is active
     // Returns after time*10ms
 
-    P5->OUT |= 0x30;  // set direction to forward
+    P5->OUT &= ~0x30;  // set direction to forward
     P3->OUT |= 0xC0;  // enables P3
 
     uint32_t H, L, i;
