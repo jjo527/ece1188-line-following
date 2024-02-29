@@ -48,6 +48,10 @@ policies, either expressed or implied, of the FreeBSD Project.
 
 #include <stdint.h>
 #include "msp.h"
+#include "../inc/Motor.h"
+#include "../inc/Clock.h"
+#include "../inc/CortexM.h"
+
 // Initialize Bump sensors
 // Make six Port 4 pins inputs
 // Activate interface pullup
