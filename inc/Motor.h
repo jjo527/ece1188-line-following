@@ -90,6 +90,16 @@ void Motor_Init(void);
 void Motor_Stop(void);
 
 /**
+ * Stop the motors, power down the drivers, and
+ * set the PWM speed control to 0% duty cycle.
+ * @param none
+ * @return none
+ * @brief  Stop the robot, pars added to work with
+ *         line_follower fsm state prototypes
+ */
+void Motor_Stop_Pars(uint16_t, uint16_t);
+
+/**
  * Drive the robot forward by running left and
  * right wheels forward with the given duty
  * cycles.

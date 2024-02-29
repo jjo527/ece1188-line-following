@@ -64,7 +64,7 @@ policies, either expressed or implied, of the FreeBSD Project.
 // Output: none
 void Motor_Init(void) {
     // write this as part of Lab 13
-  
+
     // Initializes the 6 GPIO lines and puts driver to sleep
     // Returns right away
 
@@ -105,7 +105,17 @@ void Motor_Init(void) {
 // set the PWM speed control to 0% duty cycle.
 // Input: none
 // Output: none
-void Motor_Stop(void){
+// NOTES: dummy_pars used here, so that the function prototype matches the other motor functions
+void Motor_Stop_Pars(uint16_t dummy_par1, uint16_t dummy_par2) {
+  // write this as part of Lab 13
+    P1->OUT &= ~0xC0;
+    P2->OUT &= ~0xC0;   // off
+    P3->OUT &= ~0xC0;   // low current sleep mode
+
+    P3->OUT |= 0xC0;
+}
+
+void Motor_Stop(void) {
   // write this as part of Lab 13
     P1->OUT &= ~0xC0;
     P2->OUT &= ~0xC0;   // off
@@ -123,7 +133,7 @@ void Motor_Stop(void){
 //        rightDuty duty cycle of right wheel (0 to 14,998)
 // Output: none
 // Assumes: Motor_Init() has been called
-void Motor_Forward(uint16_t leftDuty, uint16_t rightDuty){ 
+void Motor_Forward(uint16_t leftDuty, uint16_t rightDuty){
   // write this as part of Lab 13
 
     // Left Forward:
@@ -150,7 +160,7 @@ void Motor_Forward(uint16_t leftDuty, uint16_t rightDuty){
 //        rightDuty duty cycle of right wheel (0 to 14,998)
 // Output: none
 // Assumes: Motor_Init() has been called
-void Motor_Right(uint16_t leftDuty, uint16_t rightDuty){ 
+void Motor_Right(uint16_t leftDuty, uint16_t rightDuty){
   // write this as part of Lab 13
 
     // Left Forward:
@@ -178,7 +188,7 @@ void Motor_Right(uint16_t leftDuty, uint16_t rightDuty){
 //        rightDuty duty cycle of right wheel (0 to 14,998)
 // Output: none
 // Assumes: Motor_Init() has been called
-void Motor_Left(uint16_t leftDuty, uint16_t rightDuty){ 
+void Motor_Left(uint16_t leftDuty, uint16_t rightDuty){
   // write this as part of Lab 13
 
     // Left Back:
@@ -205,7 +215,7 @@ void Motor_Left(uint16_t leftDuty, uint16_t rightDuty){
 //        rightDuty duty cycle of right wheel (0 to 14,998)
 // Output: none
 // Assumes: Motor_Init() has been called
-void Motor_Backward(uint16_t leftDuty, uint16_t rightDuty){ 
+void Motor_Backward(uint16_t leftDuty, uint16_t rightDuty){
   // write this as part of Lab 13
 
     // Left Back:
