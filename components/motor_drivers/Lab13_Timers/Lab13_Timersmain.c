@@ -77,14 +77,18 @@ int Program13_1(void){
   Bump_Init();      // bump switches
   Motor_Init();     // your function
   while(1){
-    TimedPause(4000);
-    Motor_Forward(7500,7500);  // your function
-    TimedPause(2000);
-    Motor_Backward(7500,7500); // your function
-    TimedPause(3000);
-    Motor_Left(5000,5000);     // your function
-    TimedPause(3000);
-    Motor_Right(5000,5000);    // your function
+    // TimedPause(4000);
+    Clock_Delay1ms(1000);
+    Motor_Forward(1000,1000);  // your function
+//    TimedPause(2000);
+    Clock_Delay1ms(1000);
+    Motor_Backward(2000,2000); // your function
+//    TimedPause(3000);
+    Clock_Delay1ms(1000);
+    Motor_Left(2000,1000);     // your function
+//    TimedPause(3000);
+    Clock_Delay1ms(1000);
+    Motor_Right(2000,1000);    // your function
   }
 }
 
@@ -113,9 +117,7 @@ int main(void){
     // like Program13_1, but uses TimerA1 to periodically
     // check the bump switches, stopping the robot on a collision
  
- 
-  while(1){
-    
-  }
+    Program13_1();
+
 }
 
