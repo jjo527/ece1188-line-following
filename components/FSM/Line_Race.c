@@ -48,7 +48,7 @@ void SysTick_Handler(void){
 
 // Linked data structure
 struct State {
-  uint8_t out;                // LED output to mark state (debug)
+  uint8_t  out;                // LED output to mark state (debug)
   uint16_t motorSpeed_L;       //speed of Left motor
   uint16_t motorSpeed_R;       //speed of Right motor
   uint32_t time_length;        //time motors are enganged
@@ -74,6 +74,7 @@ int main(void){
     Reflectance_Init();
     //Bump_Init();
 
+    //adjust motor speeds in testing
     State_t fsm[9]={
         {0x01, 5000, 5000,  500, { S1, S2, S4, S1 }},  // S1 C
         {0x02, 3000, 1000,  500, { S6, S3, S4, S1 }},  // S2 L1
@@ -87,22 +88,22 @@ int main(void){
     };
 
     State_t *Spt;  // pointer to the current state
-    int Input;
-    uint32_t Output;
+    //int Input;
+    //uint32_t Output;
     //uint32_t heart=1;
-
-
     Spt = S1;
+
+
     while(1)
     {
-        Output = Spt->out;
-        LaunchPad_LED(Output);
+        //Output = Spt->out;
+        LaunchPad_LED(Spt->out);
 
         Motor_LeftSimple    (Spt->motorSpeed_L,Spt->time_length);
         Motor_RightSimple   (Spt->motorSpeed_R,Spt->time_length);
 
-        Input = FSM_Input();
-        Spt = Spt->next[Input];
+        //Input = FSM_Input();
+        Spt = Spt->next[FSM_Input()];
         //heart = heart^1;
         //Led_Output(heart); //debug
     }
