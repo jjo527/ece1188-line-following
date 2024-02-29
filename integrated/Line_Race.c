@@ -24,7 +24,7 @@
 */
 
 // ---------------------------------------------------
-// FSM Initialization
+//  Custom Types
 
 typedef struct State {
     uint8_t  out;                              // LED output to mark state (debug)
@@ -34,6 +34,19 @@ typedef struct State {
     uint32_t time_length;                      // time motors are engaged
     const struct State *next[4];               // next if 2-bit input is 0-3
 } State_t;
+
+enum FsmInput {
+    FAR_LEFT,
+    CLOSE_LEFT,
+    MIDDLE,
+    CLOSE_RIGHT,
+    FAR_RIGHT,
+    LOST
+};
+
+
+// ---------------------------------------------------
+// FSM Initialization
 
 #define center      &fsm[0] // S1
 #define L1          &fsm[1] // S2
@@ -59,6 +72,7 @@ State_t fsm[9]={
 
 // ---------------------------------------------------
 // Other Global Variables
+
 int g_count = 0;
 int g_delay_systick = 1;
 uint8_t g_LineResult;
@@ -77,20 +91,33 @@ void Port2_Output(uint8_t data) {
     P2->OUT = (P2->OUT&0xF8) | data;
 }
 
-
 int FSM_Input(void){
-    //Reflectance
-    if (g_LineResult==0x00) {
-        return 0; //0x00
+    // Checking Far Left
+    // 7654 33210
+    // 11XX XXXX
+    if (g_LineResult&0xC0) {
+        return FAR_LEFT;
     }
-    else if (g_LineResult < 0x08){
-        return 1; //xxxx,1___ ; too right go left
+    // Checking Far Right
+    // 7654 3210
+    // XXXX XX11
+    else if (g_LineResult&0x03) {
+        return FAR_RIGHT;
     }
-    else if (g_LineResult > 0x10) {
-        return 2; //___1,xxxx ; too left go right
+    // Checking Close Left
+    // 7654 3210
+    // XX11 XXXX
+    else if (g_LineResult&0x30) {
+        return CLOSE_LEFT;
+    }
+    // Checking Close Right
+    // 7654 3210
+    // XXXX 11XX
+    else if (g_LineResult&0x0C0) {
+        return CLOSE_RIGHT;
     }
     else {
-        return 3; //xxx1,1xxx ; center
+        return LOST;
     }
 }
 
@@ -107,7 +134,7 @@ void SysTick_Handler(void) {
         g_count = 0;
     }
     else {
-            g_count += 1;
+        g_count += 1;
     }
 }
 
@@ -129,13 +156,14 @@ int main(void) {
 
 
     while(1){
-        //Output = Spt->out;
+        (*Spt->motorFunction)(Spt->motorSpeed_L, Spt->motorSpeed_R);
+
+        // Update Debug RGB Output
         Port2_Output(Spt->out);
+
+        // Delay for testing
         Clock_Delay1ms(3000);
 
-        //Input = FSM_Input();
         Spt = Spt->next[FSM_Input()];
-        //heart = heart^1;
-        //Led_Output(heart); //debug
     }
 }
