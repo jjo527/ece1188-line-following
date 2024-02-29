@@ -105,7 +105,8 @@ void Motor_Init(void) {
 // set the PWM speed control to 0% duty cycle.
 // Input: none
 // Output: none
-void Motor_Stop(void){
+// NOTES: dummy_pars used here, so that the function prototype matches the other motor functions
+void Motor_Stop(uint16_t dummy_par1, uint16_t dummy_par2){
   // write this as part of Lab 13
     P1->OUT &= ~0xC0;
     P2->OUT &= ~0xC0;   // off

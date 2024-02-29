@@ -5,7 +5,7 @@
 #include "../inc/Texas.h"
 #include "../inc/Reflectance.h"
 //#include "../inc/MotorSimple.h"
-
+#include "../inc/Motor.h"
 
 #include "../inc/CortexM.h"
 #include "../inc/SysTickInts.h"
@@ -54,6 +54,7 @@ void SysTick_Handler(void){
 // Linked data structure
 typedef struct State {
   uint8_t  out;                // LED output to mark state (debug)
+  void (*motorFunction)(uint16_t, uint16_t);
   uint16_t motorSpeed_L;       // speed of Left motor
   uint16_t motorSpeed_R;       // speed of Right motor
   uint32_t time_length;        // time motors are enganged
@@ -83,15 +84,15 @@ typedef struct State {
 */
 
 State_t fsm[9]={
-    {0x01, 5000, 5000,  500, &Motor_Forward, { center, L1, R1, center }},                   // S1 C         red
-    {0x02, 3000, 1000,  500, &Motor_Left, { LostL, L2, R1, center }},                    // S2 L1        green
-    {0x02, 3000, 3000,  500, { LostL, L1, R1, center }},                    // S3 L2        green
-    {0x03, 1000, 3000,  500, { LostR, L1, R2, center }},                    // S4 R1        yellow
-    {0x04, 3000, 3000,  500, { LostR, L1, R1, center }},                    // S5 R2        blue
-    {0x05, 1000, 5000, 1000, { LostGo, L1, R1, center }},                   // S6 LostL     pink
-    {0x06, 5000, 1000, 1000, { LostGo, L1, R1, center }},                   // S7 LostR     sky blue
-    {0x07, 4000, 4000, 2000, { LostStop, L1, R1, center }},                 // S8 Lost Go   white
-    {0x00,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}    // S9 Lost Stop red
+    {0x01,  &Motor_Forward, 5000, 5000,  500, { center, L1, R1, center }},                   // S1 C         red
+    {0x02,     &Motor_Left, 3000, 1000,  500, { LostL, L2, R1, center }},                    // S2 L1        green
+    {0x02,     &Motor_Left, 3000, 3000,  500, { LostL, L1, R1, center }},                    // S3 L2        green
+    {0x03,    &Motor_Right, 1000, 3000,  500, { LostR, L1, R2, center }},                    // S4 R1        yellow
+    {0x04,    &Motor_Right, 3000, 3000,  500, { LostR, L1, R1, center }},                    // S5 R2        blue
+    {0x05,     &Motor_Left, 1000, 5000, 1000, { LostGo, L1, R1, center }},                   // S6 LostL     pink
+    {0x06,    &Motor_Right, 5000, 1000, 1000, { LostGo, L1, R1, center }},                   // S7 LostR     sky blue
+    {0x07, &Motor_Backward, 4000, 4000, 2000, { LostStop, L1, R1, center }},                 // S8 Lost Go   white
+    {0x00,     &Motor_Stop,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}    // S9 Lost Stop red
 };
 
 
