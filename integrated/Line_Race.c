@@ -10,6 +10,8 @@
 #include "../inc/SysTickInts.h"
 #include "../inc/bump.h"
 
+/// ---------------------------------------------------
+// Color Reference
 /*
  *  dark     --- 0x00
  *  red      R-- 0x01
@@ -57,7 +59,10 @@ State_t fsm[9]={
 
 // ---------------------------------------------------
 // Other Global Variables
-
+int g_count = 0;
+int g_delay_systick = 1;
+uint8_t g_LineResult;
+uint8_t g_BumpResult;
 
 // ---------------------------------------------------
 // Functions
@@ -69,19 +74,19 @@ void Led_Output(uint8_t data) {
 
 // write three outputs bits of P2
 void Port2_Output(uint8_t data) {
-    P2->OUT = (P2->OUT&0xF8)|data;
+    P2->OUT = (P2->OUT&0xF8) | data;
 }
 
-uint8_t LineResult,BumpResult;
+
 int FSM_Input(void){
     //Reflectance
-    if (LineResult==0x00) {
+    if (g_LineResult==0x00) {
         return 0; //0x00
     }
-    else if (LineResult< 0x08){
+    else if (g_LineResult < 0x08){
         return 1; //xxxx,1___ ; too right go left
     }
-    else if (LineResult> 0x10) {
+    else if (g_LineResult > 0x10) {
         return 2; //___1,xxxx ; too left go right
     }
     else {
@@ -89,23 +94,20 @@ int FSM_Input(void){
     }
 }
 
-
-int count=0,delay_systick=1;
-
 void SysTick_Handler(void) {
-    if (count % 10 == 0) {
+    if (g_count % 10 == 0) {
         Reflectance_Start();
-        count +=1;
+        g_count +=1;
     }
-    else if (count % (10 + delay_systick) == 0) {
-        LineResult = Reflectance_End();
-        //BumpResult = Bump_Read();
+    else if (g_count % (10 + g_delay_systick) == 0) {
+        g_LineResult = Reflectance_End();
+        //g_BumpResult = Bump_Read();
         //Led_Refl();//keep one commented out
         //Led_Bump();
-        count = 0;
+        g_count = 0;
     }
     else {
-            count += 1;
+            g_count += 1;
     }
 }
 
