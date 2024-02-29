@@ -52,7 +52,15 @@ void (*TimerA1Task)(void);   // user function
 void TimerA1_Init(void(*task)(void), uint16_t period){
     // write this as part of Lab 13
 
+    TimerA1Task = task;  // user function
+    TIMER_A1->CTL = 0x0280;
 
+    TIMER_A1->CCTL[0] = 0x0010;
+    TIMER_A1->CCR[0] = (period - 1);
+    TIMER_A1->EX0 = 0x0005;
+    NVIC->IP[3] = (NVIC->IP[3]&0xFFFFFF00)|0x00000040;
+    NVIC->ISER[0] = 0x00001000;
+    TIMER_A1->CTL |= 0x0014;
 }
 
 
@@ -69,5 +77,8 @@ void TimerA1_Stop(void){
 
 void TA1_0_IRQHandler(void){
     // write this as part of Lab 13
+
+    TIMER_A1->CCTL[0] &= ~0x0001;           // acknowledge capture/compare interrupt 0
+    (*TimerA1Task)();             // execute user task
 
 }

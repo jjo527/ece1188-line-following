@@ -117,7 +117,7 @@ int main(void){
     // like Program13_1, but uses TimerA1 to periodically
     // check the bump switches, stopping the robot on a collision
  
-    Program13_1();
+    Program13_2();
 
 }
 
