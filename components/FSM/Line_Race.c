@@ -48,9 +48,9 @@ void SysTick_Handler(void){
 
 // Linked data structure
 struct State {
-  uint32_t out;                // LED output to mark state (debug)
-  uint32_t motorSpeed_L;       //speed of Left motor
-  uint32_t motorSpeed_R;       //speed of Right motor
+  uint8_t out;                // LED output to mark state (debug)
+  uint16_t motorSpeed_L;       //speed of Left motor
+  uint16_t motorSpeed_R;       //speed of Right motor
   uint32_t time_length;        //time motors are enganged
   const struct State *next[4]; // Next if 2-bit input is 0-3
 };
