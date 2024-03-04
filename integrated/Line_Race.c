@@ -58,16 +58,16 @@ enum FsmInput {
 #define LostGo      &fsm[7] // S8
 #define LostStop    &fsm[8] // S9
 
-State_t fsm[9]={
-    {0x01,   &Motor_Forward, 5000, 5000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostGo}},    // S1 CENTER      red
-    {0x02,   &Motor_Forward, 3000, 4000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},     // S2 CLOSE_LEFT  green
-    {0x03,   &Motor_Left, 100, 2000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},     // S3 FAR_LEFT    yellow
-    {0x04,   &Motor_Forward, 4000, 3000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},     // S4 CLOSE_RIGHT blue
+State_t fsm[9]= {
+    {0x01,   &Motor_Forward, 5000, 5000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostGo}},  // S1 CENTER      red
+    {0x02,   &Motor_Forward, 3000, 4000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},   // S2 CLOSE_LEFT  green
+    {0x03,   &Motor_Left, 100, 2000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},       // S3 FAR_LEFT    yellow
+    {0x04,   &Motor_Forward, 4000, 3000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},   // S4 CLOSE_RIGHT blue
     {0x05,   &Motor_Right, 2000, 1000,  500, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},     // S5 FAR_RIGHT   pink
     {0x07,      &Motor_Left, 100, 500, 1000, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostL}},     // S6 LostL       white
     {0x07,     &Motor_Right, 500, 100, 1000, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostR}},     // S7 LostR       white
     {0x07,  &Motor_Backward, 400, 400, 2000, { FAR_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, FAR_RIGHT, LostGo}},    // S8 Lost Go     white
-    {0x07, &Motor_Stop_Pars,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}                          // S9 Lost Stop   white
+    {0x07, &Motor_Stop_Pars,    0,    0,  500, { LostStop, LostStop, LostStop, LostStop }}                        // S9 Lost Stop   white
 };
 
 // ---------------------------------------------------
@@ -145,9 +145,7 @@ int main(void) {
     LaunchPad_Init();
     Reflectance_Init();
     Motor_Init();
-
     EnableInterrupts();
-
 
     State_t *Spt;  // pointer to the current state
     Spt = CENTER;
@@ -158,26 +156,7 @@ int main(void) {
         // Update Debug RGB Output
         Port2_Output(Spt->out);
 
-        // Delay for testing
-//        Clock_Delay1ms(250);
-
         int temp = FSM_Input();
-
         Spt = Spt->next[temp];
     }
-
-//    while(1){
-//    // TimedPause(4000);
-//    Clock_Delay1ms(1000);
-//    Motor_Forward(3000,1000);  // your function
-////    TimedPause(2000);
-//    Clock_Delay1ms(1000);
-//    Motor_Backward(3000,1000); // your function
-////    TimedPause(3000);
-//    Clock_Delay1ms(1000);
-//    Motor_Left(1000,2000);     // your function
-////    TimedPause(3000);
-//    Clock_Delay1ms(1000);
-//    Motor_Right(2000,500);    // your function
-//  }
 }
