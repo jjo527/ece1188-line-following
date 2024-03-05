@@ -9,6 +9,14 @@
 #include "../inc/CortexM.h"
 #include "../inc/SysTickInts.h"
 #include "../inc/bump.h"
+#include "../inc/BumpInt.h"
+
+uint8_t CollisionData, CollisionFlag;  // mailbox
+void HandleCollision(uint8_t bumpSensor){
+   Motor_Stop();
+   CollisionData = bumpSensor;
+   CollisionFlag = 1;
+}
 
 /// ---------------------------------------------------
 // Color Reference
@@ -119,7 +127,6 @@ void Port2_Output(uint8_t data) {
 }
 
 int FSM_Input(void){
-
     if(g_LineResult&0x08 && g_LineResult&0x01){ // center XXX1 1XXX
         return center;
     }else if(g_LineResult&0x20 || g_LineResult&0x10){ // L1 XX1X XXXX
@@ -127,13 +134,17 @@ int FSM_Input(void){
     }else if(g_LineResult&0x04 || g_LineResult&0x10){ // R1 XXXX X1XX
         return R1;
     }else if(g_LineResult&0x80){ // L3 1XXX XXXX
-        return L3;
+        return L3; // 0
     }else if(g_LineResult&0x01){ // R3 XXXX XXX1
-        return R3;
+        return R3; // 6
     }else if(g_LineResult&0x40){ // L2 X1XX XXXX
-                return L2;
+        return L2; // 1
     }else if(g_LineResult&0x02){ // R2 XXXX XX1X
-            return R2;
+        return R2; // 5
+    }else if(g_LineResult&0x20){ // L1 XX1X XXXX
+        return center; // 2
+    }else if(g_LineResult&0x04){ // R1 XXXX X1XX
+        return center; // 4
     }else{
         return LOST;
     }
@@ -157,6 +168,7 @@ int main(void) {
 
     Clock_Init48MHz();
     SysTick_Init(48000,2);//64Hz
+    BumpInt_Init(&HandleCollision);      // bump switches
     LaunchPad_Init();
     Reflectance_Init();
     Motor_Init();
@@ -169,7 +181,6 @@ int main(void) {
 
     while(1){
        (*Spt->motorFunction)(Spt->motorSpeed_L, Spt->motorSpeed_R);
-        // Clock_Delay1ms(100);
 
         // Update Debug RGB Output
         Port2_Output(Spt->out);
