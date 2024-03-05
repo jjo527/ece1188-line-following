@@ -9,6 +9,14 @@
 #include "../inc/CortexM.h"
 #include "../inc/SysTickInts.h"
 #include "../inc/bump.h"
+#include "../inc/BumpInt.h"
+
+uint8_t CollisionData, CollisionFlag;  // mailbox
+void HandleCollision(uint8_t bumpSensor){
+   Motor_Stop();
+   CollisionData = bumpSensor;
+   CollisionFlag = 1;
+}
 
 /// ---------------------------------------------------
 // Color Reference
@@ -66,15 +74,15 @@ enum FsmInput {
 #define LostStop    &fsm[10] // S9
 
 State_t fsm[11]= {
-    {0x01,   &Motor_Forward  , 2000, 2000,  500, 20, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, CENTER}},     // S1 CENTER      red
-    {0x00,   &Motor_Forward  , 1600, 2000,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_LEFT}},      // S2 CLOSE_LEFT  green
-    {0x02,   &Motor_Forward  , 1200, 2000,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_LEFT}},      // S2 MID_LEFT  green
-    {0x03,   &Motor_Left     , 0, 0,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_LEFT}},      // S3 FAR_LEFT    yellow
-    {0x00,   &Motor_Forward  , 2000, 1600,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},      // S4 CLOSE_RIGHT blue
-    {0x04,   &Motor_Forward  , 2000, 1200,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},      // S4 CLOSE_RIGHT blue
-    {0x05,   &Motor_Right    , 0, 0,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},      // S5 FAR_RIGHT   pink
-    {0x07,   &Motor_Left     , 3000, 3000, 1000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},     // S6 LostL       white
-    {0x07,   &Motor_Right    , 3000, 3000, 1000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},     // S7 LostR       white
+    {0x01,   &Motor_Forward  , 4000, 4000,  500, 20, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, CENTER}},     // S1 CENTER      red
+    {0x00,   &Motor_Forward  , 0, 4000,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},      // S2 CLOSE_LEFT  green
+    {0x02,   &Motor_Forward  , 500, 4000,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},      // S2 MID_LEFT  green
+    {0x03,   &Motor_Left     , 8000, 8000,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},      // S3 FAR_LEFT    yellow
+    {0x00,   &Motor_Forward  , 4000, 500,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},      // S4 CLOSE_RIGHT blue
+    {0x04,   &Motor_Forward  , 4000, 0,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},      // S4 CLOSE_RIGHT blue
+    {0x05,   &Motor_Right    , 8000, 8000,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},      // S5 FAR_RIGHT   pink
+    {0x07,   &Motor_Left     , 8000, 8000, 1000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},     // S6 LostL       white
+    {0x07,   &Motor_Right    , 8000, 8000, 1000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},     // S7 LostR       white
     {0x07,   &Motor_Backward ,  400,  400, 2000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},     // S8 Lost Go     white
     {0x07,   &Motor_Stop_Pars,    0,    0,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT }}                        // S9 Lost Stop   white
 };
@@ -102,20 +110,20 @@ void Port2_Output(uint8_t data) {
 
 int FSM_Input(void){
 
-    if(g_LineResult&0x10 && g_LineResult&0x08){ // center XXX1 1XXX
-        return center;
+    if(g_LineResult&0x18){ // center XXX1 1XXX
+        return center; // 3
     }else if(g_LineResult&0x80){ // L3 1XXX XXXX
-        return L3;
+        return L3; // 0
     }else if(g_LineResult&0x01){ // R3 XXXX XXX1
-        return R3;
+        return R3; // 6
     }else if(g_LineResult&0x40){ // L2 X1XX XXXX
-        return L2;
+        return L2; // 1
     }else if(g_LineResult&0x02){ // R2 XXXX XX1X
-        return R2;
+        return R2; // 5
     }else if(g_LineResult&0x20){ // L1 XX1X XXXX
-        return L1;
+        return center; // 2
     }else if(g_LineResult&0x04){ // R1 XXXX X1XX
-        return R1;
+        return center; // 4
     }else{
         return LOST;
     }
@@ -139,6 +147,7 @@ int main(void) {
 
     Clock_Init48MHz();
     SysTick_Init(48000,2);//64Hz
+    BumpInt_Init(&HandleCollision);      // bump switches
     LaunchPad_Init();
     Reflectance_Init();
     Motor_Init();
@@ -150,8 +159,8 @@ int main(void) {
     int temp;
 
     while(1){
-//       (*Spt->motorFunction)(Spt->motorSpeed_L, Spt->motorSpeed_R);
-        Clock_Delay1ms(100);
+       (*Spt->motorFunction)(Spt->motorSpeed_L, Spt->motorSpeed_R);
+//        Clock_Delay1ms(1);
 
         // Update Debug RGB Output
         Port2_Output(Spt->out);

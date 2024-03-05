@@ -48,9 +48,8 @@ policies, either expressed or implied, of the FreeBSD Project.
 
 #include <stdint.h>
 #include "msp.h"
-#include "../inc/Motor.h"
-#include "../inc/Clock.h"
-#include "../inc/CortexM.h"
+
+void (*BumpTask)(uint8_t);
 
 // Initialize Bump sensors
 // Make six Port 4 pins inputs
@@ -58,24 +57,18 @@ policies, either expressed or implied, of the FreeBSD Project.
 // pins 7,6,5,3,2,0
 // Interrupt on falling edge (on touch)
 void BumpInt_Init(void(*task)(uint8_t)){
-
-    P4->SEL0 &= ~0xED;            // select GPIO
-    P4->SEL1 &= ~0xED;
-    P4->DIR &= ~0xED;             // change direction to input
-    P4->REN |= 0xED;              // enable PUPD resistor
-    P4->OUT |= 0xED;              // set to pull-up
-    P4->IES |= 0xED;              // set interrupt to falling edge event -- reverse logic
-    P4->IFG &= ~0xED;             // initially clear interrupt flag
-    P4->IE |= 0xED;               // arm interrupt on P4.0, P4.2, P4.3, P4.5-P4.7
-
-    //Port 4 IRQ is on IPR 9 of NVIC
-    //0xFF0F FFFF = 11111111000011111111111111111111, clearing bits 23-21 which house interrupt priority
-    NVIC->IP[9] = (NVIC->IP[9]&0xFF0FFFFF) | 0x00400000;     //set priority to 2
-    //Port 4 IRQ is interrupt number 38
-    //0x0000 0040 = 0100 0000, which will enable interrupt number (32 + 6) = 38
-    NVIC->ISER[1] = 0x00000040;
-    EnableInterrupts();
-
+    // write this as part of Lab 14
+    P4->SEL0 &= ~0xED;
+    P4->SEL1 &= ~0xED;    // configure sensors as GPIO
+    P4->DIR &= ~0xED;     // make sensors in
+    P4->REN |= 0xED;      // enable internal pull resistors for sensors
+    P4->OUT |= 0xED;      // make sensors pull-up
+    P4->IES |= 0xED;      // sensors are falling edge events
+    P4->IFG &= ~0xED;     // initially clear flags
+    P4->IE |= 0xED;       // arm interrupts
+    NVIC->IP[9] = (NVIC->IP[9]&0xFF00FFFF)|0x00400000; // priority 2
+    NVIC->ISER[1] = 0x00000040;        // enable interrupt 38 in NVIC
+    BumpTask = task;
 }
 
 // Read current state of 6 switches
@@ -87,20 +80,20 @@ void BumpInt_Init(void(*task)(uint8_t)){
 // bit 1 Bump1
 // bit 0 Bump0
 uint8_t Bump_Read(void){
+    // write this as part of Lab 14
+    uint8_t result;
+    result = (~P4->IN)&0x01;       // sets bit 0 with positive logic;
+    result |= ((~P4->IN)&0x0C)>>1; // sets bits 1-2 with positive logic;
+    result |= ((~P4->IN)&0xE0)>>2; // sets bits 1-2 with positive logic;
 
-    return (P4->IN&0xED);   // Read 6 most LSB of port 4
+    return result;
 }
 
 // we do not care about critical section/race conditions
 // triggered on touch, falling edge
 void PORT4_IRQHandler(void){
     // write this as part of Lab 14
-    Clock_Delay1us(10);
-    P4->IFG &= ~0xED;
-    P2->OUT ^= 0x02;
-    Motor_Stop();
-    Clock_Delay1ms(1000);
-    Motor_Backward(2500,2500);
-    Clock_Delay1ms(1000);
+    uint8_t data;
+    data = Bump_Read();
+    (*BumpTask)(data);
 }
-

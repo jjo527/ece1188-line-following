@@ -59,13 +59,13 @@ policies, either expressed or implied, of the FreeBSD Project.
 #include "../inc/MotorSimple.h"
 
 uint8_t CollisionData, CollisionFlag;  // mailbox
-void HandleCollision(uint8_t bumpSensor){
-   Motor_StopSimple();
-   Clock_Delay1ms(100000);
-   Motor_BackwardSimple(2500, 2500);
-   CollisionData = bumpSensor;
-   CollisionFlag = 1;
-}
+//void HandleCollision(uint8_t bumpSensor){
+//   Motor_StopSimple();
+//   Clock_Delay1ms(100000);
+//   Motor_BackwardSimple(2500, 2500);
+//   CollisionData = bumpSensor;
+//   CollisionFlag = 1;
+//}
 
 //int main(void){  // test of interrupt-driven bump interface
 //  Clock_Init48MHz();   // 48 MHz clock; 12 MHz Timer A clock
