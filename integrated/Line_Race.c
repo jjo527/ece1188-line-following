@@ -34,7 +34,7 @@ void HandleCollision(uint8_t bumpSensor){
 // ---------------------------------------------------
 //  Custom Types
 
-uint16_t speed_gain = 0;
+uint16_t g_speed_gain = 0;
 
 typedef struct State {
     uint8_t  out;                              // LED output to mark state (debug)
@@ -72,36 +72,43 @@ enum FsmInput {
 #define FSM_R3  &fsm[7]
 #define FSM_R4  &fsm[8]
 
+#define FSM_LOST  &fsm[9]
+
 // INPUTS
 //  77 66 55 44 | 43 | 33 22 11 00
 //  HL SL GO SR | GO | SL GO SR HR
 //  << <^ ^^ ^> | ^^ | <^ ^^ ^> >>
 
-#define BASE_SPEED 4000
-#define TURN_3 1.2 * BASE_SPEED
-#define TURN_2 1.0 * BASE_SPEED
-#define TURN_1 1.7 * BASE_SPEED
-#define TURN_SPEED 2700
+#define BASE_SPEED 2500
+#define TURN_3 1.15 * BASE_SPEED
+#define TURN_2 1.1 * BASE_SPEED
+#define TURN_1 1.15 * BASE_SPEED
+#define TURN_SPEED 2500
 #define MULT 2
 
-State_t fsm[9]= {
+State_t fsm[10]= {
     {0x01,   &Motor_Left     , TURN_SPEED , TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
     {0x02,   &Motor_Forward  , BASE_SPEED, TURN_3 , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
     {0x03,   &Motor_Forward  , TURN_2 , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
-    {0x04,   &Motor_Forward  , TURN_1 , BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x04,   &Motor_Forward  , TURN_1 , BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_LOST, }},
 
     {0x05,   &Motor_Forward  , BASE_SPEED , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
 
-    {0x04,   &Motor_Forward  ,BASE_SPEED, TURN_1,  { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x04,   &Motor_Forward  ,BASE_SPEED, TURN_1,  { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_LOST}},
     {0x03,   &Motor_Forward  , BASE_SPEED, TURN_2, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
     {0x02,   &Motor_Forward  , TURN_3, BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
     {0x01,   &Motor_Right    , TURN_SPEED , TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+
+    {0x01,   &Motor_Backward    , BASE_SPEED , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_LOST}},
 };
 
 // ---------------------------------------------------
 // Other Global Variables
 
-int g_count = 0;
+uint64_t g_count = 0;
+uint64_t g_count2 = 0;
+uint64_t g_count3 = 0;
+int g_gain_count =0;
 int g_delay_systick = 1;
 uint8_t g_LineResult;
 uint8_t g_BumpResult;
@@ -120,9 +127,9 @@ void Port2_Output(uint8_t data) {
 }
 
 int FSM_Input(void){
-    if (g_LineResult&0x10 && g_LineResult&0x08) { // center XXX1 1XXX
-        return I_C;
-    } else if(g_LineResult&0x10) { // L1 XXX1 XXXX
+    // if (g_LineResult&0x10 && g_LineResult&0x08) { // center XXX1 1XXX
+        // return I_C;
+    if(g_LineResult&0x10) { // L1 XXX1 XXXX
         return I_L1;
     } else if(g_LineResult&0x08) { // R1 XXXX 1XXX
         return I_R1;
@@ -135,8 +142,16 @@ int FSM_Input(void){
     } else if(g_LineResult&0x02) { // R3 XXXX XX1X
         return I_R3;
     } else if(g_LineResult&0x80) { // L4 1XXX XXXX
+        g_speed_gain = 0;
+        g_gain_count = 0;
+        g_count2 = 0;
+        g_count3 = 0;
         return I_L4;
     } else if(g_LineResult&0x01) { // R4 XXXX XXX1
+        g_speed_gain = 0;
+        g_gain_count = 0;
+        g_count2 = 0;
+        g_count3 = 0;
         return I_R4;
     } else {
         return LOST;
@@ -144,9 +159,18 @@ int FSM_Input(void){
 }
 
 void SysTick_Handler(void) {
+    if(g_count == 0) {
+        if (g_speed_gain < 900 && g_count2 % 1 == 0 & g_count2 != 0) {
+            g_speed_gain += 1 * g_count3;
+            g_count3++;
+        }
+        g_count2++;
+    }
+
+
     if (g_count % 10 == 0) {
         Reflectance_Start();
-        g_count +=1;
+        g_count +=1;;
     }else if (g_count % (10 + g_delay_systick) == 0) {
         g_LineResult = Reflectance_End();
         g_count = 0;
@@ -159,12 +183,16 @@ void SysTick_Handler(void) {
 // ---------------------------------------------------
 int main(void) {
     Clock_Init48MHz();
-    SysTick_Init(48000,2);//64Hz
+    SysTick_Init(45000,2);//64Hz
     BumpInt_Init(&HandleCollision);      // bump switches
     LaunchPad_Init();
     Reflectance_Init();
     Motor_Init();
     EnableInterrupts();
+
+    g_speed_gain = 0;
+    g_count2 = 0;
+    g_count3 = 0;
 
     State_t *Spt;  // pointer to the current state
     Spt = FSM_C;
@@ -172,7 +200,7 @@ int main(void) {
     int temp;
 
     while(1){
-       (*Spt->motorFunction)(Spt->motorSpeed_L, Spt->motorSpeed_R);
+       (*Spt->motorFunction)(Spt->motorSpeed_L + g_speed_gain, Spt->motorSpeed_R + g_speed_gain);
 
         // Update Debug RGB Output
         Port2_Output(Spt->out);
