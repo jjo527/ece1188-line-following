@@ -79,12 +79,11 @@ enum FsmInput {
 //  HL L3 L2 L1 | GO | R1 R2 R3 HR
 //  << <^ <^ <^ | ^^ | ^> ^> ^> >>
 
-#define BASE_SPEED 2900
+#define BASE_SPEED 4200
 #define TURN_3 1.1 * BASE_SPEED
 #define TURN_2 1.05 * BASE_SPEED
 #define TURN_1 1.05 * BASE_SPEED
-#define TURN_SPEED 3400
-#define MULT 2
+#define TURN_SPEED 4500
 
 State_t fsm[10]= {
     {0x01,   &Motor_Left     , TURN_SPEED, TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
