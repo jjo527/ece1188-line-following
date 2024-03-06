@@ -41,68 +41,61 @@ typedef struct State {
     void (*motorFunction)(uint16_t, uint16_t); // reference to desired motor function call
     uint16_t motorSpeed_L;                     // speed of Left motor
     uint16_t motorSpeed_R;                     // speed of Right motor
-    uint32_t time_length;                      // time motors are engaged
-    uint16_t gain;
-    const struct State *next[8];               // next if 2-bit input is 0-3
+    const struct State *next[10];               // next if 2-bit input is 0-3
 } State_t;
 
 enum FsmInput {
-    L3,
-    L2,
-    L1,
-    center,
-    R1,
-    R2,
-    R3,
+    I_L4,
+    I_L3,
+    I_L2,
+    I_L1,
+    I_C,
+    I_R1,
+    I_R2,
+    I_R3,
+    I_R4,
     LOST
 };
 
 
 // ---------------------------------------------------
 // FSM Initialization
+#define FSM_L4  &fsm[0]
+#define FSM_L3  &fsm[1]
+#define FSM_L2  &fsm[2]
+#define FSM_L1  &fsm[3]
 
-#define CENTER      &fsm[0] // S1
-#define CLOSE_LEFT  &fsm[1] // S2
-#define MID_LEFT    &fsm[2] // S2
-#define FAR_LEFT    &fsm[3] // S3
-#define CLOSE_RIGHT &fsm[4] // S4
-#define MID_RIGHT   &fsm[5] // S2
-#define FAR_RIGHT   &fsm[6] // S5
-#define LostL       &fsm[7] // S6
-#define LostR       &fsm[8] // S7
-#define LostGo      &fsm[9] // S8
-#define LostStop    &fsm[10] // S9
+#define FSM_C   &fsm[4]
 
+#define FSM_R1  &fsm[5]
+#define FSM_R2  &fsm[6]
+#define FSM_R3  &fsm[7]
+#define FSM_R4  &fsm[8]
 
-#define MY_MULTIPLIER 4
-#define MY_MULTIPLIER_SLIGHT 4
-#define MY_MULTIPLIER_MED 4
-#define MY_MULTIPLIER_BEND 4
-#define MY_MULTIPLIER_LOST 4
-#define BASE_SPEED 1000
-#define SOFT_TURN 1100
-#define MID_TURN 900
-#define HARD_TURN 400
-#define HARD_BACK 1000
-#define BEND_SPEED 1500
-#define LOST_BACK 500
+// INPUTS
+//  77 66 55 44 | 43 | 33 22 11 00
+//  HL SL GO SR | GO | SL GO SR HR
+//  << <^ ^^ ^> | ^^ | <^ ^^ ^> >>
 
-State_t fsm[11]= {
-    {0x01,   &Motor_Forward  , BASE_SPEED * MY_MULTIPLIER       , BASE_SPEED * MY_MULTIPLIER,  500, 20, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, CENTER}},     // S1 CENTER      red
+#define BASE_SPEED 4000
+#define TURN_3 1.2 * BASE_SPEED
+#define TURN_2 1.0 * BASE_SPEED
+#define TURN_1 1.7 * BASE_SPEED
+#define TURN_SPEED 2700
+#define MULT 2
 
-    {0x02,   &Motor_Forward  , SOFT_TURN * MY_MULTIPLIER_SLIGHT, BASE_SPEED * MY_MULTIPLIER_SLIGHT,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},      // S2 CLOSE_LEFT  green
-    {0x03,   &Motor_Forward  , BASE_SPEED * MY_MULTIPLIER_SLIGHT   , SOFT_TURN * MY_MULTIPLIER_SLIGHT,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},      // S2 MID_LEFT  green
-    {0x04,   &Motor_Left  , BASE_SPEED * MY_MULTIPLIER_BEND  , BASE_SPEED * MY_MULTIPLIER_BEND, 0, 0, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},      // S3 FAR_LEFT    yellow
+State_t fsm[9]= {
+    {0x01,   &Motor_Left     , TURN_SPEED , TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x02,   &Motor_Forward  , BASE_SPEED, TURN_3 , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x03,   &Motor_Forward  , TURN_2 , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x04,   &Motor_Forward  , TURN_1 , BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
 
-    {0x02,   &Motor_Forward    , BASE_SPEED * MY_MULTIPLIER_SLIGHT, SOFT_TURN * MY_MULTIPLIER_SLIGHT,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},      // S4 CLOSE_RIGHT blue
-    {0x03,   &Motor_Forward    , SOFT_TURN * MY_MULTIPLIER_SLIGHT   , BASE_SPEED * MY_MULTIPLIER_SLIGHT,  500, 10, { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},      // S4 CLOSE_RIGHT blue
-    {0x04,   &Motor_Right      , BASE_SPEED * MY_MULTIPLIER_BEND,  BASE_SPEED * MY_MULTIPLIER_BEND,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},      // S5 FAR_RIGHT   pink
+    {0x05,   &Motor_Forward  , BASE_SPEED , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
 
-    {0x07,   &Motor_Left , BEND_SPEED * MY_MULTIPLIER_LOST, BEND_SPEED * MY_MULTIPLIER_LOST,1000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostL}},     // S6 LostL       white
-    {0x07,   &Motor_Right     , BEND_SPEED * MY_MULTIPLIER_LOST, BEND_SPEED * MY_MULTIPLIER_LOST, 1000, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, LostR}},     // S7 LostR       white
-
-    {0x07,   &Motor_Right    , 0001 * MY_MULTIPLIER, 0001 * MY_MULTIPLIER,  400, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT}},     // S8 Lost Go     white
-    {0x07,   &Motor_Stop_Pars, 0001 * MY_MULTIPLIER, 0001 * MY_MULTIPLIER,  500, 0,  { FAR_LEFT, MID_LEFT, CLOSE_LEFT, CENTER, CLOSE_RIGHT, MID_RIGHT, FAR_RIGHT, FAR_RIGHT }}                        // S9 Lost Stop   white
+    {0x04,   &Motor_Forward  ,BASE_SPEED, TURN_1,  { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x03,   &Motor_Forward  , BASE_SPEED, TURN_2, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x02,   &Motor_Forward  , TURN_3, BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x01,   &Motor_Right    , TURN_SPEED , TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
 };
 
 // ---------------------------------------------------
@@ -127,25 +120,25 @@ void Port2_Output(uint8_t data) {
 }
 
 int FSM_Input(void){
-    if(g_LineResult&0x08 && g_LineResult&0x01){ // center XXX1 1XXX
-        return center;
-    }else if(g_LineResult&0x20 || g_LineResult&0x10){ // L1 XX1X XXXX
-        return L1;
-    }else if(g_LineResult&0x04 || g_LineResult&0x10){ // R1 XXXX X1XX
-        return R1;
-    }else if(g_LineResult&0x80){ // L3 1XXX XXXX
-        return L3; // 0
-    }else if(g_LineResult&0x01){ // R3 XXXX XXX1
-        return R3; // 6
-    }else if(g_LineResult&0x40){ // L2 X1XX XXXX
-        return L2; // 1
-    }else if(g_LineResult&0x02){ // R2 XXXX XX1X
-        return R2; // 5
-    }else if(g_LineResult&0x20){ // L1 XX1X XXXX
-        return center; // 2
-    }else if(g_LineResult&0x04){ // R1 XXXX X1XX
-        return center; // 4
-    }else{
+    if (g_LineResult&0x10 && g_LineResult&0x08) { // center XXX1 1XXX
+        return I_C;
+    } else if(g_LineResult&0x10) { // L1 XXX1 XXXX
+        return I_L1;
+    } else if(g_LineResult&0x08) { // R1 XXXX 1XXX
+        return I_R1;
+    } else if(g_LineResult&0x20) { // L2 XX1X XXXX
+        return I_L2;
+    } else if(g_LineResult&0x04) { // R2 XXXX X1XX
+        return I_R2;
+    } else if(g_LineResult&0x40) { // L3 X1XX XXXX
+        return I_L3;
+    } else if(g_LineResult&0x02) { // R3 XXXX XX1X
+        return I_R3;
+    } else if(g_LineResult&0x80) { // L4 1XXX XXXX
+        return I_L4;
+    } else if(g_LineResult&0x01) { // R4 XXXX XXX1
+        return I_R4;
+    } else {
         return LOST;
     }
 }
@@ -165,7 +158,6 @@ void SysTick_Handler(void) {
 
 // ---------------------------------------------------
 int main(void) {
-
     Clock_Init48MHz();
     SysTick_Init(48000,2);//64Hz
     BumpInt_Init(&HandleCollision);      // bump switches
@@ -175,7 +167,7 @@ int main(void) {
     EnableInterrupts();
 
     State_t *Spt;  // pointer to the current state
-    Spt = CENTER;
+    Spt = FSM_C;
 
     int temp;
 
