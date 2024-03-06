@@ -76,30 +76,30 @@ enum FsmInput {
 
 // INPUTS
 //  77 66 55 44 | 43 | 33 22 11 00
-//  HL SL GO SR | GO | SL GO SR HR
-//  << <^ ^^ ^> | ^^ | <^ ^^ ^> >>
+//  HL L3 L2 L1 | GO | R1 R2 R3 HR
+//  << <^ <^ <^ | ^^ | ^> ^> ^> >>
 
 #define BASE_SPEED 2500
-#define TURN_3 1.15 * BASE_SPEED
-#define TURN_2 1.1 * BASE_SPEED
-#define TURN_1 1.15 * BASE_SPEED
-#define TURN_SPEED 2500
+#define TURN_3 1.1 * BASE_SPEED
+#define TURN_2 1.05 * BASE_SPEED
+#define TURN_1 1.05 * BASE_SPEED
+#define TURN_SPEED 2750
 #define MULT 2
 
 State_t fsm[10]= {
-    {0x01,   &Motor_Left     , TURN_SPEED , TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
-    {0x02,   &Motor_Forward  , BASE_SPEED, TURN_3 , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
-    {0x03,   &Motor_Forward  , TURN_2 , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
-    {0x04,   &Motor_Forward  , TURN_1 , BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_LOST, }},
+    {0x01,   &Motor_Left     , TURN_SPEED, TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x02,   &Motor_Forward  , BASE_SPEED, TURN_3     , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x03,   &Motor_Forward  , BASE_SPEED, TURN_2     , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x04,   &Motor_Forward  , BASE_SPEED, TURN_1     , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
 
-    {0x05,   &Motor_Forward  , BASE_SPEED , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
+    {0x05,   &Motor_Forward  , BASE_SPEED, BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_L4}},
 
-    {0x04,   &Motor_Forward  ,BASE_SPEED, TURN_1,  { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_LOST}},
-    {0x03,   &Motor_Forward  , BASE_SPEED, TURN_2, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
-    {0x02,   &Motor_Forward  , TURN_3, BASE_SPEED, { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
-    {0x01,   &Motor_Right    , TURN_SPEED , TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x04,   &Motor_Forward  , BASE_SPEED, TURN_1     , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x03,   &Motor_Forward  , BASE_SPEED, TURN_2     , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x02,   &Motor_Forward  , TURN_3    , TURN_3     , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
+    {0x01,   &Motor_Right    , TURN_SPEED, TURN_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_R4}},
 
-    {0x01,   &Motor_Backward    , BASE_SPEED , BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_LOST}},
+    {0x01,   &Motor_Backward , BASE_SPEED, BASE_SPEED , { FSM_L4, FSM_L3, FSM_L2, FSM_L1, FSM_C, FSM_R1, FSM_R2, FSM_R3, FSM_R4, FSM_LOST}},
 };
 
 // ---------------------------------------------------
@@ -160,8 +160,8 @@ int FSM_Input(void){
 
 void SysTick_Handler(void) {
     if(g_count == 0) {
-        if (g_speed_gain < 900 && g_count2 % 1 == 0 & g_count2 != 0) {
-            g_speed_gain += 1 * g_count3;
+        if (g_speed_gain < 2000 && g_count2 % 1 == 0 & g_count2 != 0) {
+            g_speed_gain += 1.5 * g_count3;
             g_count3++;
         }
         g_count2++;
