@@ -77,38 +77,36 @@ int Program13_1(void){
   Bump_Init();      // bump switches
   Motor_Init();     // your function
   while(1){
-    // TimedPause(4000);
     Clock_Delay1ms(1000);
     Motor_Forward(1000,1000);  // your function
-//    TimedPause(2000);
     Clock_Delay1ms(1000);
     Motor_Backward(2000,2000); // your function
-//    TimedPause(3000);
     Clock_Delay1ms(1000);
     Motor_Left(2000,1000);     // your function
-//    TimedPause(3000);
     Clock_Delay1ms(1000);
     Motor_Right(2000,1000);    // your function
   }
 }
+
 
 // Test of Periodic interrupt
 #define REDLED (*((volatile uint8_t *)(0x42098060)))
 #define BLUELED (*((volatile uint8_t *)(0x42098068)))
 uint32_t Time;
 void Task(void){
-  REDLED ^= 0x01;       // toggle P2.0
-  REDLED ^= 0x01;       // toggle P2.0
   Time = Time + 1;
-  REDLED ^= 0x01;       // toggle P2.0
+  if (Time % 100 == 0) {
+      P2->OUT ^= 0x04;
+  }
 }
 int Program13_2(void){
   Clock_Init48MHz();
   LaunchPad_Init();  // built-in switches and LEDs
-  TimerA1_Init(&Task,50000);  // 1000 Hz
+  uint32_t time = 50000;
+  TimerA1_Init(&Task,time);  // 1000 Hz
   EnableInterrupts();
   while(1){
-    BLUELED ^= 0x01; // toggle P2.1
+    ; // toggle P2.1
   }
 }
 
@@ -117,7 +115,7 @@ int main(void){
     // like Program13_1, but uses TimerA1 to periodically
     // check the bump switches, stopping the robot on a collision
  
-    Program13_1();
+    Program13_2();
 
 }
 
